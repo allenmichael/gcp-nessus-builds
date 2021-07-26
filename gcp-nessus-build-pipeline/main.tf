@@ -18,7 +18,7 @@ resource "google_project_service" "secretmanager" {
 resource "google_secret_manager_secret" "linking-key-secret" {
   provider = google-beta
 
-  secret_id = "LINKING_KEY"
+  secret_id = "linking-key"
 
   replication {
     automatic = true
@@ -44,7 +44,7 @@ resource "google_secret_manager_secret_iam_member" "cloud-build-access-linking-k
 resource "google_secret_manager_secret" "admin-pass-key-secret" {
   provider = google-beta
 
-  secret_id = "ADMIN_PASS"
+  secret_id = "admin-pass"
 
   replication {
     automatic = true
