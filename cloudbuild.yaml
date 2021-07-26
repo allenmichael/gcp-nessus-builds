@@ -4,7 +4,7 @@ steps:
     args:
     - -c
     - |
-      docker build -t ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE} --build-arg=LINKING_KEY=$$LINKING_KEY --build-arg=ADMIN_PASS=$$ADMIN_PASSWORD .
+      docker build -t ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE} --build-arg="LINKING_KEY=$$LINKING_KEY" --build-arg="ADMIN_PASS=$$ADMIN_PASSWORD" .
     secretEnv: ['LINKING_KEY', 'ADMIN_PASSWORD']
 images:
 - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}'
@@ -14,7 +14,7 @@ substitutions:
   _IMAGE: npro
 availableSecrets:
   secretManager:
-  - versionName: projects/$PROJECT_ID/secrets/linking-key/versions/1
+  - versionName: projects/$PROJECT_ID/secrets/linkingkey/versions/latest
     env: 'LINKING_KEY'
-  - versionName: projects/$PROJECT_ID/secrets/admin-pass/versions/1
+  - versionName: projects/$PROJECT_ID/secrets/adminpass/versions/latest
     env: 'ADMIN_PASSWORD'

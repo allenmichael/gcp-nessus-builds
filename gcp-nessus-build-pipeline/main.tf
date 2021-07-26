@@ -5,26 +5,19 @@ provider "google" {
   project = var.project
 }
 
-resource "google_project_service_identity" "cb_sa" {
+resource "google_project_service_identity" "cloudbuild" {
   provider = google-beta
   service  = "cloudbuild.googleapis.com"
-}
-
-resource "google_project_service" "secretmanager" {
-  provider = google-beta
-  service  = "secretmanager.googleapis.com"
 }
 
 resource "google_secret_manager_secret" "linking-key-secret" {
   provider = google-beta
 
-  secret_id = "linking-key"
+  secret_id = "linkingkey"
 
   replication {
     automatic = true
   }
-
-  depends_on = [google_project_service.secretmanager]
 }
 
 resource "google_secret_manager_secret_version" "linking-key-secret-1" {
@@ -32,6 +25,7 @@ resource "google_secret_manager_secret_version" "linking-key-secret-1" {
 
   secret      = google_secret_manager_secret.linking-key-secret.id
   secret_data = var.my_secret_data
+  enabled = true
 }
 
 resource "google_secret_manager_secret_iam_member" "cloud-build-access-linking-key" {
@@ -39,18 +33,17 @@ resource "google_secret_manager_secret_iam_member" "cloud-build-access-linking-k
 
   secret_id = google_secret_manager_secret.linking-key-secret.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_project_service_identity.cb_sa.email}"
+  member    = "serviceAccount:${google_project_service_identity.cloudbuild.email}"
 }
+
 resource "google_secret_manager_secret" "admin-pass-key-secret" {
   provider = google-beta
 
-  secret_id = "admin-pass"
+  secret_id = "adminpass"
 
   replication {
     automatic = true
   }
-
-  depends_on = [google_project_service.secretmanager]
 }
 
 resource "google_secret_manager_secret_version" "admin-pass-secret-1" {
@@ -58,6 +51,7 @@ resource "google_secret_manager_secret_version" "admin-pass-secret-1" {
 
   secret      = google_secret_manager_secret.admin-pass-key-secret.id
   secret_data = var.admin_pass_secret_data
+  enabled = true
 }
 
 resource "google_secret_manager_secret_iam_member" "cloud-build-access-admin-pass" {
@@ -65,8 +59,16 @@ resource "google_secret_manager_secret_iam_member" "cloud-build-access-admin-pas
 
   secret_id = google_secret_manager_secret.admin-pass-key-secret.id
   role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${google_project_service_identity.cb_sa.email}"
+  member    = "serviceAccount:${google_project_service_identity.cloudbuild.email}"
 }
+
+# resource "null_resource" "health_check" {
+
+#  provisioner "local-exec" {
+
+#     command = "/bin/bash provision-secrets.sh"
+#   }
+# }
 
 resource "google_artifact_registry_repository" "my-repo" {
   provider = google-beta
