@@ -1,0 +1,20 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    entrypoint: 'bash'
+    args:
+    - -c
+    - |
+      docker build -t ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE} --build-arg=LINKING_KEY=$$LINKING_KEY --build-arg=ADMIN_PASS=$$ADMIN_PASSWORD .
+    secretEnv: ['LINKING_KEY', 'ADMIN_PASSWORD']
+images:
+- '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}'
+substitutions:
+  _LOCATION: us-central1
+  _REPOSITORY: nessus-builds
+  _IMAGE: npro
+availableSecrets:
+  secretManager:
+  - versionName: projects/$PROJECT_ID/secrets/LINKING_KEY/versions/1
+    env: 'LINKING_KEY'
+  - versionName: projects/$PROJECT_ID/secrets/ADMIN_PASS/versions/1
+    env: 'ADMIN_PASSWORD'
