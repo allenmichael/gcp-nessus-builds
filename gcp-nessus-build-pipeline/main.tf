@@ -61,20 +61,12 @@ resource "google_secret_manager_secret_iam_member" "cloud-build-access-admin-pas
   member    = "serviceAccount:${google_project_service_identity.cloudbuild.email}"
 }
 
-# resource "null_resource" "health_check" {
-
-#  provisioner "local-exec" {
-
-#     command = "/bin/bash provision-secrets.sh"
-#   }
-# }
-
-resource "google_artifact_registry_repository" "my-repo" {
+resource "google_artifact_registry_repository" "artifact-repo" {
   provider = google-beta
 
   location      = var.location
   repository_id = var.artifact_registry_name
-  description   = "example docker repository"
+  description   = "Nessus Build Docker repository"
   format        = "DOCKER"
 }
 
@@ -92,5 +84,5 @@ resource "google_cloudbuild_trigger" "cloud_build_trigger" {
   }
 
   filename   = "cloudbuild.yaml"
-  depends_on = [google_sourcerepo_repository.repo, google_artifact_registry_repository.my-repo]
+  depends_on = [google_sourcerepo_repository.repo, google_artifact_registry_repository.artifact-repo]
 }
