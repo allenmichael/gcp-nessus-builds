@@ -4,14 +4,15 @@ variable "project" {
 }
 
 variable "location" {
-  description = "The location (region or zone) of the GKE cluster."
+  description = "The location to use."
   type        = string
+  default     = "us-central1"
 }
 
 variable "repository_name" {
   description = "Name of the Google Cloud Source Repository."
   type        = string
-  default     = "example-repo"
+  default     = "nessus-docker"
 }
 
 variable "artifact_registry_name" {
@@ -26,16 +27,14 @@ variable "branch_name" {
   default     = "master"
 }
 
-variable "my_secret_data" {
+variable "license_secret_data" {
   description = "Secret data to store in Secret Manager."
   type        = string
-  default     = "super secret password"
   sensitive   = true
 }
 
 variable "admin_pass_secret_data" {
   description = "Secret data to store in Secret Manager."
   type        = string
-  default     = "linking key secret password123"
   sensitive   = true
 }

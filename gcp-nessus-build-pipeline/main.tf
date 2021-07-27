@@ -10,28 +10,27 @@ resource "google_project_service_identity" "cloudbuild" {
   service  = "cloudbuild.googleapis.com"
 }
 
-resource "google_secret_manager_secret" "linking-key-secret" {
+resource "google_secret_manager_secret" "license-secret" {
   provider = google-beta
 
-  secret_id = "linkingkey"
+  secret_id = "license"
 
   replication {
     automatic = true
   }
 }
 
-resource "google_secret_manager_secret_version" "linking-key-secret-1" {
+resource "google_secret_manager_secret_version" "license-secret-1" {
   provider = google-beta
 
-  secret      = google_secret_manager_secret.linking-key-secret.id
-  secret_data = var.my_secret_data
-  enabled = true
+  secret      = google_secret_manager_secret.license-secret.id
+  secret_data = var.license_secret_data
 }
 
 resource "google_secret_manager_secret_iam_member" "cloud-build-access-linking-key" {
   provider = google-beta
 
-  secret_id = google_secret_manager_secret.linking-key-secret.id
+  secret_id = google_secret_manager_secret.license-secret.id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${google_project_service_identity.cloudbuild.email}"
 }
