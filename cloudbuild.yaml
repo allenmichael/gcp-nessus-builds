@@ -6,6 +6,8 @@ steps:
     - |
       docker build -t ${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE} --build-arg="LICENSE=$$LICENSE" --build-arg="ADMIN_PASS=$$ADMIN_PASSWORD" .
     secretEnv: ['LICENSE', 'ADMIN_PASSWORD']
+    timeout: 3600s
+timeout: 4500s
 images:
 - '${_LOCATION}-docker.pkg.dev/$PROJECT_ID/${_REPOSITORY}/${_IMAGE}'
 substitutions:

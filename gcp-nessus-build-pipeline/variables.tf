@@ -24,7 +24,7 @@ variable "artifact_registry_name" {
 variable "branch_name" {
   description = "Example branch name used to trigger builds."
   type        = string
-  default     = "master"
+  default     = "main"
 }
 
 variable "license_secret_data" {
