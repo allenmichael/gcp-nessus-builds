@@ -34,7 +34,7 @@ class Nessus(APIPlatform):
         super()._authenticate(**kwargs)
 
 
-def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key')):
+def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), scan_username: str = "root"):
     '''
     Scan the hosts with ssh key
     '''
@@ -90,7 +90,7 @@ def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key')):
                     "SSH": [
                         {
                             "auth_method": "public key",
-                            "username": "root",
+                            "username": scan_username,
                             "private_key": keyname,
                             "private_key_passphrase": "",
                             "elevate_privileges_with": "Nothing"

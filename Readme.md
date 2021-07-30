@@ -38,5 +38,9 @@ Cloud Build also runs on a source trigger on the `main` branch of the created So
 docker run --rm -it          \
     -v "$(pwd)"/scan:/scan   \
     -v "$(pwd)"/creds:/creds \
-    us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest 192.168.100.1 --ssh-key /creds/id_rsa
+    us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest 192.168.100.1 --ssh-key /creds/id_rsa --scan-username='<user-to-assume-on-ssh>'
 ```
+
+## Example for using the container as a long running Nessus instance
+`docker run -it -p 8834:8834 --entrypoint='/opt/nessus/sbin/nessus-service' us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest`
+After running, connect to https://localhost:8834 or https://<vm-public-ip>:8834
