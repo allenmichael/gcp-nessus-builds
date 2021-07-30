@@ -43,4 +43,5 @@ docker run --rm -it          \
 
 ## Example for using the container as a long running Nessus instance
 `docker run -it -p 8834:8834 --entrypoint='/opt/nessus/sbin/nessus-service' us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest`
-After running, connect to https://localhost:8834 or https://<vm-public-ip>:8834
+
+After container starts running, connect to https://localhost:8834 or https://<vm-public-ip>:8834
