@@ -38,7 +38,10 @@ Cloud Build also runs on a source trigger on the `main` branch of the created So
 docker run --rm -it          \
     -v "$(pwd)"/scan:/scan   \
     -v "$(pwd)"/creds:/creds \
-    us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest 192.168.100.1 --ssh-key /creds/id_rsa --scan-username='<user-to-assume-on-ssh>'
+    us-central1-docker.pkg.dev/nessus-project/nessus-builds/npro:latest 192.168.100.1 \ 
+    --ssh-key /creds/id_rsa \
+    --ssh-key-passphrase='<ssh-key-passphrase-if-applicable>'  \ 
+    --scan-username='<user-to-assume-on-ssh>'
 ```
 
 ## Example for using the container as a long running Nessus instance

@@ -34,7 +34,7 @@ class Nessus(APIPlatform):
         super()._authenticate(**kwargs)
 
 
-def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), scan_username: str = "root"):
+def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), ssh_key_passphrase: str = '', scan_username: str = "root"):
     '''
     Scan the hosts with ssh key
     '''
@@ -70,36 +70,69 @@ def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), scan_username: st
     keyname = fn.fileuploaded
 
     # Launch the scan
-    scan = scanner.post('scans', json={
-        "uuid": template_id,
-        "settings": {
-            "test_local_nessus_host": "no",
-            "launch_now": True,
-            "enabled": False,
-            "live_results": "",
-            "name": "Auto-launched Scan",
-            "description": "",
-            "folder_id": 3,
-            "scanner_id": "1",
-            "text_targets": hosts,
-            "file_targets": ""
-        },
-        "credentials": {
-            "add": {
-                "Host": {
-                    "SSH": [
-                        {
-                            "auth_method": "public key",
-                            "username": scan_username,
-                            "private_key": keyname,
-                            "private_key_passphrase": "",
-                            "elevate_privileges_with": "Nothing"
-                        }
-                    ]
-                }
+    if scan_username != 'root':
+        scan = scanner.post('scans', json={
+            "uuid": template_id,
+            "settings": {
+                "test_local_nessus_host": "no",
+                "launch_now": True,
+                "enabled": False,
+                "live_results": "",
+                "name": "Auto-launched Scan",
+                "description": "",
+                "folder_id": 3,
+                "scanner_id": "1",
+                "text_targets": hosts,
+                "file_targets": ""
             },
-        }
-    })
+            "credentials": {
+                "add": {
+                    "Host": {
+                        "SSH": [
+                            {
+                                "auth_method": "public key",
+                                "username": scan_username,
+                                "private_key": keyname,
+                                "private_key_passphrase": ssh_key_passphrase,
+                                "elevate_privileges_with": "sudo",
+                                "escalation_account": "root"
+                            }
+                        ]
+                    }
+                },
+            }
+        })
+    else:
+        scan = scanner.post('scans', json={
+            "uuid": template_id,
+            "settings": {
+                "test_local_nessus_host": "no",
+                "launch_now": True,
+                "enabled": False,
+                "live_results": "",
+                "name": "Auto-launched Scan",
+                "description": "",
+                "folder_id": 3,
+                "scanner_id": "1",
+                "text_targets": hosts,
+                "file_targets": ""
+            },
+            "credentials": {
+                "add": {
+                    "Host": {
+                        "SSH": [
+                            {
+                                "auth_method": "public key",
+                                "username": scan_username,
+                                "private_key": keyname,
+                                "private_key_passphrase": "",
+                                "elevate_privileges_with": "Nothing"
+                            }
+                        ]
+                    }
+                },
+            }
+        })
 
     # Wait for the scan to complete
     info = scanner.get(f'scans/{scan.scan.id}')
