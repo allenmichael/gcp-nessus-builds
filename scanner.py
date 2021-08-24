@@ -96,7 +96,10 @@ def scan(hosts: str,
                                                    '"sudo" is used when a '
                                                    'non-root account is used.')
                                              ),
-
+         escalation_account: str = typer.Option('root',
+                                                help=('The account that the '
+                                                      'scanner will attempt '
+                                                      'to escalate to.'))
          ):
     '''
     Scan the hosts with ssh key
@@ -142,7 +145,8 @@ def scan(hosts: str,
                             "username": username,
                             "private_key": keyname,
                             "private_key_passphrase": ssh_key_pw,
-                            "elevate_privileges_with": priv_escalation
+                            "elevate_privileges_with": priv_escalation,
+                            "escalation_account": escalation_account
                         }
                     ]
                 }
