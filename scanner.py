@@ -37,6 +37,9 @@ class Nessus(APIPlatform):
 
 @app.command()
 def adduser(username: str, password: str):
+    '''
+    Simple non-interactive admin user creation func.
+    '''
     p = pexpect.spawn(f'/opt/nessus/sbin/nessuscli adduser {username}')
     p.expect('Login password')
     p.sendline(password)
