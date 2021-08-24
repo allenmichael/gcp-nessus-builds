@@ -6,12 +6,13 @@ from time import sleep
 import requests
 import logging
 import urllib3
+import pexpect
 import typer
 import yaml
 
 
 urllib3.disable_warnings()
-logging.basicConfig(level=logging.DEBUG)
+app = typer.Typer()
 
 
 class Nessus(APIPlatform):
@@ -34,9 +35,26 @@ class Nessus(APIPlatform):
         super()._authenticate(**kwargs)
 
 
-def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), ssh_key_passphrase: str = '', scan_username: str = "root"):
+@app.command()
+def adduser(username: str, password: str):
+    p = pexpect.spawn(f'/opt/nessus/sbin/nessuscli adduser {username}')
+    p.expect('Login password')
+    p.sendline(password)
+    p.expect('Login password')
+    p.sendline(password)
+    p.expect('system administrator')
+    p.sendline('y')
+    p.expect('empty rules set')
+    p.sendline('')
+    p.expect('system administrator')
+    p.sendline('y')
+    p.wait()
+
+
+@app.command()
+def spawn(terminate: bool = False) -> Popen:
     '''
-    Scan the hosts with ssh key
+    Spawns and waits for Nessus to become available.
     '''
     # launch Nessus
     p = Popen(['/opt/nessus/sbin/nessus-service'])
@@ -53,8 +71,39 @@ def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), ssh_key_passphras
             elif r['status'] == 'loading':
                 logging.debug((f'Nessus plugin loading is '
                                f'{r.get("progress", 0)}% complete'))
-        except:
+        except Exception:
             pass
+    if terminate:
+        p.terminate()
+    return p
+
+
+@app.command()
+def scan(hosts: str,
+         ssh_key: Path = typer.Option('/creds/key',
+                                      help=('The SSH private keyfile.  This '
+                                            'file must be in a PEM format.')),
+         ssh_key_pw: str = typer.Option('',
+                                        help='The passphrase to the SSH Key'),
+         username: str = typer.Option('root',
+                                      help=('The username of the remote host '
+                                            'that the authenticated scan will '
+                                            'be performed using')),
+         priv_escalation: str = typer.Option('Nothing',
+                                             help=('The type of privilege '
+                                                   'escalation to be '
+                                                   'performed.  Typically '
+                                                   '"sudo" is used when a '
+                                                   'non-root account is used.')
+                                             ),
+
+         ):
+    '''
+    Scan the hosts with ssh key
+    '''
+    logging.basicConfig(level=logging.DEBUG)
+    p = spawn()
+
     creds = yaml.safe_load(open('/etc/nessus_creds.yaml'))
     scanner = Nessus(username=creds.get('username'),
                      password=creds.get('password'))
@@ -70,69 +119,36 @@ def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), ssh_key_passphras
     keyname = fn.fileuploaded
 
     # Launch the scan
-    if scan_username != 'root':
-        scan = scanner.post('scans', json={
-            "uuid": template_id,
-            "settings": {
-                "test_local_nessus_host": "no",
-                "launch_now": True,
-                "enabled": False,
-                "live_results": "",
-                "name": "Auto-launched Scan",
-                "description": "",
-                "folder_id": 3,
-                "scanner_id": "1",
-                "text_targets": hosts,
-                "file_targets": ""
+    scan = scanner.post('scans', json={
+        "uuid": template_id,
+        "settings": {
+            "test_local_nessus_host": "no",
+            "launch_now": True,
+            "enabled": False,
+            "live_results": "",
+            "name": "Auto-launched Scan",
+            "description": "",
+            "folder_id": 3,
+            "scanner_id": "1",
+            "text_targets": hosts,
+            "file_targets": ""
+        },
+        "credentials": {
+            "add": {
+                "Host": {
+                    "SSH": [
+                        {
+                            "auth_method": "public key",
+                            "username": username,
+                            "private_key": keyname,
+                            "private_key_passphrase": ssh_key_pw,
+                            "elevate_privileges_with": priv_escalation
+                        }
+                    ]
+                }
             },
-            "credentials": {
-                "add": {
-                    "Host": {
-                        "SSH": [
-                            {
-                                "auth_method": "public key",
-                                "username": scan_username,
-                                "private_key": keyname,
-                                "private_key_passphrase": ssh_key_passphrase,
-                                "elevate_privileges_with": "sudo",
-                                "escalation_account": "root"
-                            }
-                        ]
-                    }
-                },
-            }
-        })
-    else:
-        scan = scanner.post('scans', json={
-            "uuid": template_id,
-            "settings": {
-                "test_local_nessus_host": "no",
-                "launch_now": True,
-                "enabled": False,
-                "live_results": "",
-                "name": "Auto-launched Scan",
-                "description": "",
-                "folder_id": 3,
-                "scanner_id": "1",
-                "text_targets": hosts,
-                "file_targets": ""
-            },
-            "credentials": {
-                "add": {
-                    "Host": {
-                        "SSH": [
-                            {
-                                "auth_method": "public key",
-                                "username": scan_username,
-                                "private_key": keyname,
-                                "private_key_passphrase": "",
-                                "elevate_privileges_with": "Nothing"
-                            }
-                        ]
-                    }
-                },
-            }
-        })
+        }
+    })
 
     # Wait for the scan to complete
     info = scanner.get(f'scans/{scan.scan.id}')
@@ -162,5 +178,6 @@ def scan_hosts(hosts: str, ssh_key: Path = Path('/creds/key'), ssh_key_passphras
     # Kill the Nessus daemon
     p.terminate()
 
+
 if __name__ == '__main__':
-    typer.run(scan_hosts)
+    app()
